@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Server Quest: Aventura Backend</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2e2e4d);
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+      overflow: hidden;
+    }
+
+    .container {
+      background-color: #292942;
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 700px;
+      margin: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+      transition: transform 0.5s;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .answer-btn {
+      display: block;
+      background-color: #3e3e5e;
+      margin: 10px auto;
+      padding: 15px;
+      width: 90%;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .answer-btn:hover {
+      background-color: #6f6faa;
+      transform: scale(1.03);
+    }
+
+    .correct {
+      background-color: #4caf50 !important;
+    }
+
+    .incorrect {
+      background-color: #e53935 !important;
+    }
+
+    #score, #progress-bar {
+      margin-top: 20px;
+    }
+
+    #next-btn {
+      background-color: #2196f3;
+      border: none;
+      padding: 12px 25px;
+      color: white;
+      font-size: 16px;
+      margin-top: 25px;
+      cursor: pointer;
+      border-radius: 10px;
+      display: none;
+    }
+
+    #next-btn:hover {
+      background-color: #1976d2;
+    }
+
+    #progress-bar {
+      background-color: #444;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 20px;
+      margin-top: 20px;
+    }
+
+    #progress {
+      background-color: #76ff03;
+      height: 100%;
+      width: 0%;
+      transition: width 0.4s;
+    }
+
+    #final-message {
+      font-size: 20px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Server Quest: Aventura Backend</h1>
+    <div id="question-box">
+      <p id="question">Cargando pregunta...</p>
+      <div id="answers"></div>
+    </div>
+    <div id="progress-bar"><div id="progress"></div></div>
+    <p id="score">Puntos: 0</p>
+    <button id="next-btn" onclick="nextQuestion()">Siguiente pregunta</button>
+    <p id="final-message"></p>
+  </div>
+
+  <audio id="correct-sound" src="https://www.soundjay.com/button/sounds/button-09.mp3"></audio>
+  <audio id="incorrect-sound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
+
+  <script>
+    const questions = [
+      {
+        question: "¿Qué protocolo usa HTTPS?",
+        options: ["SSL/TLS", "FTP", "HTTP", "SMTP"],
+        answer: "SSL/TLS"
+      },
+      {
+        question: "¿Qué es un servidor?",
+        options: [
+          "Una base de datos",
+          "Un software que responde a solicitudes",
+          "Un lenguaje de programación",
+          "Un cliente web"
+        ],
+        answer: "Un software que responde a solicitudes"
+      },
+      {
+        question: "¿Qué función tiene una API REST?",
+        options: ["Hacer llamadas a funciones locales", "Estilizar la web", "Permitir interacción cliente-servidor", "Proteger con antivirus"],
+        answer: "Permitir interacción cliente-servidor"
+      },
+      {
+        question: "¿Qué método HTTP modifica datos existentes?",
+        options: ["GET", "POST", "PUT", "OPTIONS"],
+        answer: "PUT"
+      },
+      {
+        question: "¿Qué comando inicializa un proyecto en Node.js?",
+        options: ["node install", "npm start", "npm init", "node setup"],
+        answer: "npm init"
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const questionEl = document.getElementById("question");
+    const answersEl = document.getElementById("answers");
+    const scoreEl = document.getElementById("score");
+    const nextBtn = document.getElementById("next-btn");
+    const progressEl = document.getElementById("progress");
+    const finalMessage = document.getElementById("final-message");
+
+    const correctSound = document.getElementById("correct-sound");
+    const incorrectSound = document.getElementById("incorrect-sound");
+
+    function showQuestion() {
+      const q = questions[currentQuestion];
+      questionEl.textContent = q.question;
+      answersEl.innerHTML = "";
+      finalMessage.textContent = "";
+      nextBtn.style.display = "none";
+
+      q.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.classList.add("answer-btn");
+        btn.onclick = () => checkAnswer(btn, option);
+        answersEl.appendChild(btn);
+      });
+
+      updateProgress();
+    }
+
+    function checkAnswer(button, selected) {
+      const correct = questions[currentQuestion].answer;
+      const allBtns = document.querySelectorAll(".answer-btn");
+
+      allBtns.forEach(btn => btn.disabled = true);
+
+      if (selected === correct) {
+        score++;
+        button.classList.add("correct");
+        correctSound.play();
+      } else {
+        button.classList.add("incorrect");
+        allBtns.forEach(btn => {
+          if (btn.textContent === correct) btn.classList.add("correct");
+        });
+        incorrectSound.play();
+      }
+
+      scoreEl.textContent = `Puntos: ${score}`;
+      nextBtn.style.display = "inline-block";
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        questionEl.textContent = "🎉 Juego terminado";
+        answersEl.innerHTML = "";
+        nextBtn.style.display = "none";
+        finalMessage.textContent = score >= 4 ? "¡Eres un maestro del servidor! 🔥" :
+          score >= 2 ? "¡Nada mal! Sigue practicando. 💡" : "Inténtalo de nuevo y mejora tus habilidades. 👨‍💻";
+      }
+    }
+
+    function updateProgress() {
+      const percent = ((currentQuestion) / questions.length) * 100;
+      progressEl.style.width = percent + "%";
+    }
+
+    window.onload = showQuestion;
+  </script>
+</body>
+</html>
